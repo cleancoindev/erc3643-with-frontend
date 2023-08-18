@@ -229,7 +229,7 @@
 
             var claimId = await window.contractIdentity.methods.addClaim(1,1,data2,sign,"0x000","0x000").send({ from: account, gas: "10000000" });
 			console.log(claimId);
-			document.getElementById("addclaim").innerHTML = "claim is added by the issuer with id" + claimId;   
+			document.getElementById("addclaim").innerHTML = "claim is added by the issuer with id" + claimId.events.ClaimAdded.returnValues.claimId;   
             
             
             
