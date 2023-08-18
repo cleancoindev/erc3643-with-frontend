@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Ticketing System</title>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.2.7-rc.0/web3.min.js"></script>
+
+	<style>
+		/* CSS styles for the DApp interface */
+		body {
+			background-color: grey;
+			font-family: tahoma;
+			font-size: 33px;
+			display: flex;
+			flex-direction: row;
+		}
+
+		button {
+			background-color: ghostwhite;
+			font-size: 33px;
+			padding: 5px;
+			font-family: Impact;
+		}
+
+		input {
+			width: 25vw;
+			height: 30px;
+			font-size: 25px;
+			font-family: tahoma;
+			outline: none;
+		}
+
+		#readArea {
+			flex-basis: 50%;
+		}
+
+		#writeArea {
+			flex-basis: 50%;
+		}
+
+		button:hover {
+			background-color: lightsalmon;
+		}
+
+		p {
+			font-size: small;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div id="readArea">
+		<!-- Button for connecting to Metamask -->
+		<button onclick="connectMetamask()">CONNECT TO METAMASK</button>
+		<p id="userArea">Status: Not connected to Metamask</p>
+
+		<!-- Button for connecting to the smart contract -->
+		<button onclick="connectContract()">CONNECT TO CONTRACT</button>
+		<p id="contractArea">Status: Not connected to Contract</p>
+
+		<!-- Button and input fields for creating an identity -->
+		<button onclick="createIdentity()">create Identity</button><br>
+		<input type="text" id="userAddressForIdentity" placeholder="address of user"> <br>
+		<p id="identityAddress">identity is going to be created by this function</p><br>
+
+
+        <!-- Button and input fields for creating an claim Issuer -->
+		<button onclick="createClaimIssuer()">create claimIssuer</button><br>
+		<input type="text" id="userAddressForClaimIssuer" placeholder="address of user"> <br>
+		<p id="ClaimIssuerAddress">identity is going to be created by this function</p><br>
+
+
+        
+
+        <button onclick="addKeyInIdentity()">add claim power</button><br>
+		<input type="text" id="addOfIdentity" placeholder="address of identity user"> <br>
+		<input type="text" id="addofClaim" placeholder="address of claim user"> <br>
+		
+        <p id="addkey">claim power is going to given by identity itself</p><br>
+
+        <button onclick="addClaimInIdentity()">add claim    </button><br>
+		<input type="text" id="addrOfIdentity" placeholder="address of identity user"> <br>
+		<input type="text" id="addrofClaim" placeholder="address of claim user"> <br>
+		
+        <p id="addclaim">claim is going to given by identity by claim issuer</p><br>
+	</div>
+    <div id="writeArea">
+        <!-- Button and input fields for creating an identity -->
+		<button onclick="getIdentity()">get Identity</button><br>
+		<input type="text" id="AddressForIdentity" placeholder="address of user"> <br>
+		<p id="gotidentityAddress">identity is going to be given by this function</p><br>
+
+
+        <!-- Button and input fields for creating an claim Issuer -->
+		<button onclick="getClaimIssuer()">get claimIssuer</button><br>
+		<input type="text" id="AddressForClaimIssuer" placeholder="address of user"> <br>
+		<p id="gotClaimIssuerAddress">identity is going to be given by this function</p><br>
+    </div>
+	<script>
+
+		let account;
+
+		// Function for connecting to Metamask
+		const connectMetamask = async () => {
+			if (window.ethereum !== "undefined") {
+				const accounts = await ethereum.request({ method: "eth_requestAccounts" });
+				account = accounts[0];
+				console.log(account);
+
+				document.getElementById("userArea").innerHTML = `User Account: ${account}`;
+			}
+		}
+
+		// Function for connecting to the smart contract
+		const connectContract = async () => {
+			var Abi;
+			await fetch('abiFactory.json')
+				.then(response => response.json())
+				.then(data => {
+					// Handle the retrieved JSON data
+					Abi = data;
+				})
+				.catch(error => {
+					console.error('Error loading JSON file:', error);
+				});
+
+			const contractABI = Abi;
+			const contractAddress = "0xCbe136521f1BBDd6D445C5C05E3324c472DF6f85";
+			window.web3 = await new Web3(window.ethereum);
+			window.contract = await new window.web3.eth.Contract(contractABI, contractAddress);
+			document.getElementById("contractArea").innerHTML = "Connected to Contract";
+		}
+
+		// Function for creating an event
+		const createIdentity = async () => {
+			var add = document.getElementById("userAddressForIdentity").value;
+			await window.contract.methods.createidentity(add).send({ from: account, gas: "10000000" });
+            const data = await window.contract.methods.getidentity(add).call();
+            console.log(data);
+			document.getElementById("identityAddress").innerHTML = "identity Created with address = " + data;
+		}
+
+        const createClaimIssuer = async () => {
+			var add = document.getElementById("userAddressForClaimIssuer").value;
+			await window.contract.methods.createClaimIssuer(add).send({ from: account, gas: "10000000" });
+            const data = await window.contract.methods.getClaimIssuer(add).call();
+            console.log(data);
+			document.getElementById("ClaimIssuerAddress").innerHTML = "claim issuer Created with address = " + data;
+		}
+        const getIdentity = async () => {
+			var identity = document.getElementById("AddressForIdentity").value;
+			const data = await window.contract.methods.getidentity(identity).call();
+            console.log(data);
+			document.getElementById("gotidentityAddress").innerHTML = "identity  = " + data;
+		}
+
+        const getClaimIssuer = async () => {
+			var issuer = document.getElementById("AddressForClaimIssuer").value;
+		    const data = await window.contract.methods.getClaimIssuer(issuer).call();
+            console.log(data);
+			document.getElementById("gotClaimIssuerAddress").innerHTML = "claim issuer = " + data;
+		}
+
+        const addKeyInIdentity = async () =>{
+            var identity = document.getElementById("addOfIdentity").value;
+			const data1 = await window.contract.methods.getidentity(identity).call();
+
+            var claim = document.getElementById("addofClaim").value;
+			const data2 = await window.contract.methods.getClaimIssuer(claim).call();
+
+            
+
+            var Abi;
+			await fetch('abiIdentity.json')
+				.then(response => response.json())
+				.then(data => {
+					// Handle the retrieved JSON data
+					Abi = data;
+				})
+				.catch(error => {
+					console.error('Error loading JSON file:', error);
+				});
+
+			var ABI = Abi;
+			var contractAddress = data1;
+			window.web3 = await new Web3(window.ethereum);
+			window.contractIdentity = await new window.web3.eth.Contract(ABI, contractAddress);
+			console.log(window.contractIdentity.methods);
+            var key = await window.contractIdentity.methods.byteKey(claim).call();
+            console.log(key);
+            var status = await window.contractIdentity.methods.addKey(key,3,1).send({ from: account, gas: "10000000" });
+			console.log(status.status);
+			document.getElementById("addkey").innerHTML = "claim power is given to the issuer with status : " + status.status;   
+        }
+
+        const addClaimInIdentity = async () =>{
+            var identity = document.getElementById("addrOfIdentity").value;
+			const data1 = await window.contract.methods.getidentity(identity).call();
+
+            var claim = document.getElementById("addrofClaim").value;
+			const data2 = await window.contract.methods.getClaimIssuer(claim).call();
+
+            
+
+            var Abi;
+			await fetch('abiIdentity.json')
+				.then(response => response.json())
+				.then(data => {
+					// Handle the retrieved JSON data
+					Abi = data;
+				})
+				.catch(error => {
+					console.error('Error loading JSON file:', error);
+				});
+
+			var ABI = Abi;
+			var contractAddress = data1;
+			window.web3 = await new Web3(window.ethereum);
+			window.contractIdentity = await new window.web3.eth.Contract(ABI, contractAddress);
+            // console.log(window.contractIdentity.methods);
+            // var key = await window.contractIdentity.methods.getKeysByPurpose(3).call();
+            var hash = await window.contractIdentity.methods.getsig(data1, 1,"0x000").call();
+            const sign = await ethereum.request({
+                method: 'personal_sign',
+                params: [hash, account],
+                });
+            console.log(sign);
+
+            var claimId = await window.contractIdentity.methods.addClaim(1,1,data2,sign,"0x000","0x000").send({ from: account, gas: "10000000" });
+			console.log(claimId);
+			document.getElementById("addclaim").innerHTML = "claim is added by the issuer with id" + claimId;   
+            
+            
+            
+        }
+
+
+	
+	</script>
+</body> 
+
+</html>
