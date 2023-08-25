@@ -6,32 +6,32 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 
 import "./interface/IIdentityRegistryStorage.sol";
 
-/// @title ERC-3643 - IdentityRegistryStorage
-/// @notice Stores user identities and their respective countries.
+
 contract IdentityRegistryStorage is IIdentityRegistryStorage, AccessControl {
-    /// @dev struct containing the identity contract and the country of the user
+    
     struct Identity {
-        /// @dev Identity contract of the user
+       
         IIdentity identityContract;
-        /// @dev Country of the user
+       
         uint16 investorCountry;
     }
 
     // keccak256(AGENT_ROLE)
     bytes32 public constant AGENT_ROLE =
-        0xcab5a0bfe0b79d2c4b1c2e02599fa044d115b7511f9659307cb4276950967709;
+       0xcab5a0bfe0b79d2c4b1c2e02599fa044d115b7511f9659307cb4276950967709;
 
     // keccak256(OWNER_ROLE)
     bytes32 public constant OWNER_ROLE =
         0xb19546dff01e856fb3f010c267a7b1c60363cf8a4664e21cc89c26224620214e;
 
-    /// @dev Mapping between a user address and the corresponding identity
+    // Mapping between a user address and the corresponding identity
     mapping(address => Identity) internal _identities;
 
-    /// @dev Array of Identity Registries linked to this storage
+    //  Array of Identity Registries linked to this storage
     address[] internal _identityRegistries;
 
     constructor() {
+    
         _grantRole(bytes32(0), _msgSender());
         _grantRole(AGENT_ROLE, _msgSender());
         _grantRole(OWNER_ROLE, _msgSender());

@@ -63,10 +63,3 @@ contract ClaimTopicsRegistry is IClaimTopicsRegistry, Ownable {
         return true;
     }
 }
-
-
-//0x36ba7acC1340FedA8E63673678ABA986073ca6b4     factory
-//0x52CE2a002Cb1f93AA0FD7e70f6A0d7c202c8115C   claimissuer acc5
-//0xC5bc65EAB2845F5Fb29925F41EF1188810B5aA81    claimissuer acc6 
-//0x98A5B1E62C1039E2043bc58b9Da628e9d4987AF8    claimIssuerResgistry
-//0xb2a28d95B754EE34ea3359862Ff11095a142ad5d     claimtopic registry

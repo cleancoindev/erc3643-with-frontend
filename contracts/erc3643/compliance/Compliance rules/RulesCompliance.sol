@@ -3,12 +3,12 @@ pragma solidity ^0.8.17;
 
 import "../Compliance.sol";
 
-abstract contract RulesCompliance is Compliance {
+abstract contract RulesCompliance is BasicComplaince {
 
 
 //Mappings
-    mapping(uint16 => bool) private _restrictedCountries;
-    mapping(uint16 => bool) private _whitelistedCountries;
+    mapping(uint256 => bool) private _restrictedCountries;
+    mapping(uint256 => bool) private _whitelistedCountries;
     mapping(address => TransferCounter) public usersCounters;
     mapping (address => uint256) public IDBalance;
     
@@ -41,13 +41,13 @@ abstract contract RulesCompliance is Compliance {
 
 
 //CountryRestrictions Events
-    event AddedRestrictedCountry(uint16 _country);
-    event RemovedRestrictedCountry(uint16 _country);
+    event AddedRestrictedCountry(uint256 _country);
+    event RemovedRestrictedCountry(uint256 _country);
 
 
 //WhitelistCountry events
-    event WhitelistedCountry(uint16 _country);
-    event UnWhitelistedCountry(uint16 _country);
+    event WhitelistedCountry(uint256 _country);
+    event UnWhitelistedCountry(uint256 _country);
 
 //DayMonthLimit events
     event DailyLimitUpdated(uint _newDailyLimit);
@@ -65,37 +65,37 @@ abstract contract RulesCompliance is Compliance {
     event SupplyLimitSet(uint256 _limit);
 
 
-    function batchRestrictCountries(uint16[] calldata _countries) external {
+    function batchRestrictCountries(uint256[] calldata _countries) external {
         for (uint i = 0; i < _countries.length; i++) {
             addCountryRestriction(_countries[i]);
         }
     }
 
-    function batchUnrestrictCountries(uint16[] calldata _countries) external {
+    function batchUnrestrictCountries(uint256[] calldata _countries) external {
         for (uint i = 0; i < _countries.length; i++) {
             removeCountryRestriction(_countries[i]);
         }
     }
 
-    function addCountryRestriction(uint16 _country) public onlyOwner {
+    function addCountryRestriction(uint256 _country) public onlyOwner {
         require(!_restrictedCountries[_country], "country already restricted");
         _restrictedCountries[_country] = true;
         emit AddedRestrictedCountry(_country);
     }
 
-    function removeCountryRestriction(uint16 _country) public onlyOwner {
+    function removeCountryRestriction(uint256 _country) public onlyOwner {
         require(_restrictedCountries[_country], "country not restricted");
         _restrictedCountries[_country] = false;
         emit RemovedRestrictedCountry(_country);
     }
 
-    function isCountryRestricted(uint16 _country) public view returns (bool) {
+    function isCountryRestricted(uint256 _country) public view returns (bool) {
         return (_restrictedCountries[_country]);
     }
 
     function complianceCheckOnCountryRestrictions (address /*_from*/, address _to, uint256 /*_value*/)
     public view returns (bool) {
-        uint16 receiverCountry = _getCountry(_to); //_getCountry function calling from the complaince contract 
+        uint256 receiverCountry = _getCountry(_to); //_getCountry function calling from the complaince contract 
         if (isCountryRestricted(receiverCountry)) {
             return false;
         }
@@ -111,37 +111,37 @@ abstract contract RulesCompliance is Compliance {
     
 //WhitelistingCountry Functions
 
-    function batchWhitelistCountries(uint16[] memory _countries) external {
+    function batchWhitelistCountries(uint256[] memory _countries) external {
         for (uint i = 0; i < _countries.length; i++) {
             whitelistCountry(_countries[i]);
         }
     }
 
-    function batchUnWhitelistCountries(uint16[] memory _countries) external {
+    function batchUnWhitelistCountries(uint256[] memory _countries) external {
         for (uint i = 0; i < _countries.length; i++) {
             unWhitelistCountry(_countries[i]);
         }
     }
 
-    function whitelistCountry(uint16 _country) public onlyOwner {
+    function whitelistCountry(uint256 _country) public onlyOwner {
         require(!_whitelistedCountries[_country], "country already whitelisted");
         _whitelistedCountries[_country] = true;
         emit WhitelistedCountry(_country);
     }
 
-    function unWhitelistCountry(uint16 _country) public onlyOwner {
+    function unWhitelistCountry(uint256 _country) public onlyOwner {
         require(_whitelistedCountries[_country], "country not whitelisted");
         _whitelistedCountries[_country] = false;
         emit UnWhitelistedCountry(_country);
     }
 
-    function isCountryWhitelisted(uint16 _country) public view returns (bool) {
+    function isCountryWhitelisted(uint256 _country) public view returns (bool) {
         return (_whitelistedCountries[_country]);
     }
 
     function complianceCheckOnCountryWhitelisting (address /*_from*/, address _to, uint256 /*_value*/)
     public view returns (bool) {
-        uint16 receiverCountry = _getCountry(_to);
+        uint256 receiverCountry = _getCountry(_to);
         if (isCountryWhitelisted(receiverCountry)) {
             return true;
         }
@@ -354,13 +354,13 @@ abstract contract RulesCompliance is Compliance {
     }
 
     function complianceCheckOnSupplyLimit (address /*_from*/, address /*_to*/, uint256 /*_value*/)
-    public view returns (bool) {
+    public pure returns (bool) {
         return true;
     }
 
     function _transferActionOnSupplyLimit(address _from, address _to, uint256 _value) internal {}
 
-    function _creationActionOnSupplyLimit(address /*_to*/, uint256 /*_value*/) internal {
+    function _creationActionOnSupplyLimit(address /*_to*/, uint256 /*_value*/) internal view{
         require(tokenBound.totalSupply() <= supplyLimit, "cannot mint more tokens");
     }
 

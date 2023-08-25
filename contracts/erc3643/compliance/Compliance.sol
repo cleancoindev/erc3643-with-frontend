@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-
-import "https://github.com/TokenySolutions/T-REX/blob/main/contracts/roles/AgentRole.sol";
-import "https://github.com/TokenySolutions/T-REX/blob/main/contracts/token/Token.sol";
-import "https://github.com/TokenySolutions/T-REX/blob/main/contracts/token/IToken.sol";
 import "./ICompliance.sol";
+import "https://github.com/TokenySolutions/T-REX/blob/main/contracts/roles/AgentRole.sol";
+import "../token/token.sol";
+import "../token/Itoken.sol";
+
 
 abstract contract BasicComplaince is Ownable, ICompliance {
 

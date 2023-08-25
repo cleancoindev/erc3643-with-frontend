@@ -2,7 +2,7 @@
 <html>
 
 <head>
-	<title>Ticketing System</title>
+	<title>tokenization System</title>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.2.7-rc.0/web3.min.js"></script>
 
 	<style>
@@ -84,6 +84,20 @@
 		<input type="text" id="addrofClaim" placeholder="address of claim user"> <br>
 		
         <p id="addclaim">claim is going to given by identity by claim issuer</p><br>
+
+		<button onclick="registerUser()">Register User</button><br>
+		<input type="text" id="ownerTokenforRegistry" placeholder="address of owner"> <br>
+		<input type="number" id="idTokenforRegistry" placeholder="id of token"> <br>
+		<input type="text" id="recipient" placeholder="address of user"> <br>
+		<input type="number" id="countryCode" placeholder="country code"> <br>
+        <p id="adduser">user will be registered by this function </p><br>
+
+		<button onclick="mintToken()">mint token</button><br>
+		<input type="text" id="ownerTokenforMint" placeholder="address of owner"> <br>
+		<input type="number" id="idTokenforMint" placeholder="id of token"> <br>
+		<input type="text" id="recipientOfToken" placeholder="address of user"> <br>
+		<input type="number" id="amountMint" placeholder="amount Of Tokens"> <br>
+        <p id="mint">token will minted in recipients account by agent </p><br>
 	</div>
     <div id="writeArea">
         <!-- Button and input fields for creating an identity -->
@@ -96,12 +110,48 @@
 		<button onclick="getClaimIssuer()">get claimIssuer</button><br>
 		<input type="text" id="AddressForClaimIssuer" placeholder="address of user"> <br>
 		<p id="gotClaimIssuerAddress">identity is going to be given by this function</p><br>
+
+		<button onclick="makeToken()">make Token </button><br>
+		<input type="text" id="OwnerAddress" placeholder="address of Owner"> <br>
+		<input type="text" id="nameEvent" placeholder="name Of event"> <br>
+		<input type="text" id="tokenName" placeholder="name of token"> <br>
+		<input type="text" id="SymbolToken" placeholder="Symbol of Token"> <br>
+		<input type="number" id="DecimalToken" placeholder="decimal of token"> <br>
+		<!-- <input type="text" id="onchainIdToken" placeholder="onchainId of token(can be zero)"> <br> -->
+		<p id="createToken">token is going to be given by this function</p><br>
+		
+
+
+		<button onclick="makeAgent()">make agent </button><br>
+		<input type="text" id="ownerForAgent" placeholder="address of Owner"> <br>
+		<input type="number" id="idOfEventForAgent" placeholder="id Of event"> <br>
+		<input type="text" id="agentAddress" placeholder="address of agent"> <br>
+		<p id="giveAgentPower">agent will be added by this function for token</p><br>
+
+		<button onclick="makeClaimIssuer()">make Issuer of token </button><br>
+		<input type="text" id="ownerForclaimIssuer" placeholder="address of Owner"> <br>
+		<input type="number" id="idforClaimIssuer" placeholder="id Of event"> <br>
+		<input type="text" id="issuerAddress" placeholder="address of issuer"> <br>
+		<p id="giveIssuerPower">issuer will be added by this function for token</p><br>
+
+
+		<button onclick="IsVerified()">Is Verified User </button><br>
+		<input type="text" id="ownerForIsVerified" placeholder="address of Owner"> <br>
+		<input type="number" id="idforIsVerified" placeholder="id Of event"> <br>
+		<input type="text" id="userAdddr" placeholder="address of user"> <br>
+		<p id="IsVerified">checking is user verified by the issuer or not</p><br>
+
+		<button onclick="checkBalance()">check Balance </button><br>
+		<input type="text" id="ownerTokenforbal" placeholder="address of Owner"> <br>
+		<input type="number" id="idTokenforbal" placeholder="id Of event"> <br>
+		<input type="text" id="recipientOfTokenforBal" placeholder="address of checker"> <br>
+		<p id="checkBal">checking is user verified by the issuer or not</p><br>
+
     </div>
 	<script>
 
 		let account;
-
-		// Function for connecting to Metamask
+				// Function for connecting to Metamask
 		const connectMetamask = async () => {
 			if (window.ethereum !== "undefined") {
 				const accounts = await ethereum.request({ method: "eth_requestAccounts" });
@@ -111,11 +161,15 @@
 				document.getElementById("userArea").innerHTML = `User Account: ${account}`;
 			}
 		}
+		let factoryIdentity =  Web3.utils.toChecksumAddress("0xE4042Dc5aA52d9F12A6CbE016Bb3A96953E17345");
+
+		let factorytoken =  Web3.utils.toChecksumAddress("0x456662e0E74E9e670bAbb7DA47DB9f61629dAEd7");
+
 
 		// Function for connecting to the smart contract
 		const connectContract = async () => {
 			var Abi;
-			await fetch('abiFactory.json')
+			await fetch('./abi/abiFactory.json')
 				.then(response => response.json())
 				.then(data => {
 					// Handle the retrieved JSON data
@@ -126,7 +180,7 @@
 				});
 
 			const contractABI = Abi;
-			const contractAddress = "0xCbe136521f1BBDd6D445C5C05E3324c472DF6f85";
+			const contractAddress = factoryIdentity;
 			window.web3 = await new Web3(window.ethereum);
 			window.contract = await new window.web3.eth.Contract(contractABI, contractAddress);
 			document.getElementById("contractArea").innerHTML = "Connected to Contract";
@@ -172,7 +226,7 @@
             
 
             var Abi;
-			await fetch('abiIdentity.json')
+			await fetch('./abi/abiIdentity.json')
 				.then(response => response.json())
 				.then(data => {
 					// Handle the retrieved JSON data
@@ -187,10 +241,10 @@
 			window.web3 = await new Web3(window.ethereum);
 			window.contractIdentity = await new window.web3.eth.Contract(ABI, contractAddress);
 			console.log(window.contractIdentity.methods);
-            var key = await window.contractIdentity.methods.byteKey(claim).call();
+            var key = await window.contractIdentity.methods.bytekey(claim).call();
             console.log(key);
             var status = await window.contractIdentity.methods.addKey(key,3,1).send({ from: account, gas: "10000000" });
-			console.log(status.status);
+			
 			document.getElementById("addkey").innerHTML = "claim power is given to the issuer with status : " + status.status;   
         }
 
@@ -204,7 +258,7 @@
             
 
             var Abi;
-			await fetch('abiIdentity.json')
+			await fetch('./abi/abiIdentity.json')
 				.then(response => response.json())
 				.then(data => {
 					// Handle the retrieved JSON data
@@ -228,12 +282,390 @@
             console.log(sign);
 
             var claimId = await window.contractIdentity.methods.addClaim(1,1,data2,sign,"0x000","0x000").send({ from: account, gas: "10000000" });
-			console.log(claimId);
-			document.getElementById("addclaim").innerHTML = "claim is added by the issuer with id" + claimId.events.ClaimAdded.returnValues.claimId;   
+			console.log(claimId.events.ClaimAdded.returnValues.claimId);
+			document.getElementById("addclaim").innerHTML = "claim is added by the issuer with id : " + claimId.events.ClaimAdded.returnValues.claimId;   
             
             
             
         }
+		const  makeToken= async () => {
+			var owner = document.getElementById("OwnerAddress").value;
+			var name = document.getElementById("nameEvent").value;
+			var tokName = document.getElementById("tokenName").value;
+			var tokSymbol = document.getElementById("SymbolToken").value;
+			var Deci = document.getElementById("DecimalToken").value;
+			var Abi;
+			await fetch('./abi/factoryToken.json')
+				.then(response => response.json())
+				.then(data => {
+					// Handle the retrieved JSON data
+					Abi = data;
+				})
+				.catch(error => {
+					console.error('Error loading JSON file:', error);
+				});
+
+			var ABI = Abi;
+			var contractAddress = factorytoken;
+			window.web3 = await new Web3(window.ethereum);
+			window.contractFactoryToken = await new window.web3.eth.Contract(ABI, contractAddress);
+			var data = await window.contractFactoryToken.methods.deployall(owner,name,tokName,tokSymbol,Deci,"0x0000000000000000000000000000000000000000").send({ from: account, gas: "10000000" });
+			console.log(data.events.ownerInfo.returnValues);
+			document.getElementById("createToken").innerHTML = "token is created with id : " + data.events.ownerInfo.returnValues.IdToken;
+			var d1 = await window.contractFactoryToken.methods.alldata(owner,data.events.ownerInfo.returnValues.IdToken).call();
+			console.log(d1.ctrImplementation);
+					}
+
+		const  makeAgent= async () => {
+			var owner = document.getElementById("ownerForAgent").value;
+			var id = document.getElementById("idOfEventForAgent").value;
+			var agent = document.getElementById("agentAddress").value;
+			console.log(await account);
+			if(owner != await account)
+			{
+				console.log("account ",await account);
+				console.log("owner ",await owner);
+
+				document.getElementById("giveAgentPower").innerHTML = `<p style="color:red;">caller and ower are not equal</p>`;
+				return;
+			}
+			document.getElementById("giveAgentPower").innerHTML = `<p>agent is been by this function for token</p>`;
+			
+			var Abifactory;
+			await fetch('./abi/factoryToken.json')
+				.then(response => response.json())
+				.then(data => {
+					// Handle the retrieved JSON data
+					Abifactory = data;
+				})
+				.catch(error => {
+					console.error('Error loading JSON file:', error);
+				});
+
+			var ABIfactory = Abifactory;
+			var contractAddressfactory = factorytoken;
+			window.web3 = await new Web3(window.ethereum);
+			window.contractFactoryToken = await new window.web3.eth.Contract(ABIfactory, contractAddressfactory);
+			var d1 = await window.contractFactoryToken.methods.alldata(owner,id).call();
+			console.log(d1.tokenImplementation);
+
+			var Abitoken;
+			await fetch('./abi/token.json')
+				.then(response => response.json())
+				.then(data => {
+					// Handle the retrieved JSON data
+					Abitoken = data;
+				})
+				.catch(error => {
+					console.error('Error loading JSON file:', error);
+				});
+
+			var ABItoken = Abitoken;
+			var contractAddresstoken = d1.tokenImplementation;
+			window.web3 = await new Web3(window.ethereum);
+			window.contractToken = await new window.web3.eth.Contract(ABItoken, contractAddresstoken);
+			await window.contractToken.methods.grantRole("0xcab5a0bfe0b79d2c4b1c2e02599fa044d115b7511f9659307cb4276950967709",agent).send({ from: account, gas: "10000000" });
+			var role2 = await window.contractToken.methods.hasRole("0xcab5a0bfe0b79d2c4b1c2e02599fa044d115b7511f9659307cb4276950967709",agent).call();
+			
+			var AbiIdentityReg;
+			await fetch('./abi/identityregistry.json')
+				.then(response => response.json())
+				.then(data4 => {
+					// Handle the retrieved JSON data
+					AbiIdentityReg = data4;
+				})
+				.catch(error => {
+					console.error('Error loading JSON file:', error);
+				});
+
+			var ABIIdentityReg = AbiIdentityReg;
+			var contractAddressIdentityReg = d1.irImplementation;
+			window.web3 = await new Web3(window.ethereum);
+			window.contractIdentityReg = await new window.web3.eth.Contract(ABIIdentityReg,contractAddressIdentityReg );
+			await window.contractIdentityReg.methods.grantRole("0xcab5a0bfe0b79d2c4b1c2e02599fa044d115b7511f9659307cb4276950967709",agent).send({ from: account, gas: "10000000" });
+			var role1 = await window.contractIdentityReg.methods.hasRole("0xcab5a0bfe0b79d2c4b1c2e02599fa044d115b7511f9659307cb4276950967709",agent).call();
+			
+			document.getElementById("giveAgentPower").innerHTML = "status ="+ role1;
+
+		}
+		const registerUser =async() =>{
+			var owner = document.getElementById("ownerTokenforRegistry").value;
+			var id = document.getElementById("idTokenforRegistry").value;
+			var recipient = document.getElementById("recipient").value;
+			var country = document.getElementById("countryCode").value;
+            var Abifactory;
+			await fetch('./abi/factoryToken.json')
+				.then(response => response.json())
+				.then(data => {
+					// Handle the retrieved JSON data
+					Abifactory = data;
+				})
+				.catch(error => {
+					console.error('Error loading JSON file:', error);
+				});
+
+			var ABIfactory = Abifactory;
+			var contractAddressfactory =factorytoken;
+			window.web3 = await new Web3(window.ethereum);
+			window.contractFactoryToken = await new window.web3.eth.Contract(ABIfactory, contractAddressfactory);
+			var d1 = await window.contractFactoryToken.methods.alldata(owner,id).call();
+			var Abitoken;
+			await fetch('./abi/token.json')
+				.then(response => response.json())
+				.then(data => {
+					// Handle the retrieved JSON data
+					Abitoken = data;
+				})
+				.catch(error => {
+					console.error('Error loading JSON file:', error);
+				});
+
+			var ABItoken = Abitoken;
+			var contractAddresstoken = d1.tokenImplementation;
+			window.web3 = await new Web3(window.ethereum);
+			window.contractToken = await new window.web3.eth.Contract(ABItoken, contractAddresstoken);
+			var role2 = await window.contractToken.methods.hasRole("0xcab5a0bfe0b79d2c4b1c2e02599fa044d115b7511f9659307cb4276950967709",account).call();
+			var AbiIdentityReg;
+			await fetch('./abi/identityregistry.json')
+				.then(response => response.json())
+				.then(data4 => {
+					// Handle the retrieved JSON data
+					AbiIdentityReg = data4;
+				})
+				.catch(error => {
+					console.error('Error loading JSON file:', error);
+				});
+
+			var ABIIdentityReg = AbiIdentityReg;
+			console.log(ABIIdentityReg);
+			var contractAddressIdentityReg = d1.irImplementation;
+			console.log(contractAddressIdentityReg);
+			window.web3 = await new Web3(window.ethereum);
+			window.contractIdentityReg = await new window.web3.eth.Contract(AbiIdentityReg, contractAddressIdentityReg);
+			var role1 = await window.contractIdentityReg.methods.hasRole("0xcab5a0bfe0b79d2c4b1c2e02599fa044d115b7511f9659307cb4276950967709",account).call();
+			console.log(role1);	
+			console.log(role2);
+			if(role1 == "true" && role2 == "true")
+			{
+				document.getElementById("adduser").innerHTML = `<p style="color:red;">caller is not an agent</p>`;
+				return;
+			}
+			document.getElementById("adduser").innerHTML = `<p>user will be registered by this function </p>`;
+			
+			
+			const data1 = await window.contract.methods.getidentity(recipient).call();
+			console.log(data1);
+			console.log(await window.contractIdentityReg.methods);
+			var g1 = await window.contractIdentityReg.methods.registerIdentity(recipient,data1,country).send({ from: account, gas: "10000000" });
+
+			document.getElementById("adduser").innerHTML = "user registered ";
+
+		}
+
+		const  makeClaimIssuer = async () => {
+			var owner = document.getElementById("ownerForclaimIssuer").value;
+			var id = document.getElementById("idforClaimIssuer").value;
+			var issuer = document.getElementById("issuerAddress").value;
+			// console.log(await account);
+			if(owner != account)
+			{
+				document.getElementById("giveIssuerPower").innerHTML = `<p style="color:red;">caller and ower are not equal</p>`;
+				return;
+			}
+			document.getElementById("giveIssuerPower").innerHTML = `<p>issuer will be added by this function for token</p>`;
+			var Abifactory;
+			await fetch('./abi/factoryToken.json')
+				.then(response => response.json())
+				.then(data => {
+					// Handle the retrieved JSON data
+					Abifactory = data;
+				})
+				.catch(error => {
+					console.error('Error loading JSON file:', error);
+				});
+
+			var ABIfactory = Abifactory;
+			var contractAddressfactory = factorytoken;
+			window.web3 = await new Web3(window.ethereum);
+			window.contractFactoryToken = await new window.web3.eth.Contract(ABIfactory, contractAddressfactory);
+			var d1 = await window.contractFactoryToken.methods.alldata(owner,id).call();
+			console.log(d1.tirImplementation);
+			var AbiclaimTopicRegistry;
+			await fetch('./abi/claimTopicregistry.json')
+				.then(response => response.json())
+				.then(data1 => {
+					// Handle the retrieved JSON data
+					AbiclaimTopicRegistry = data1;
+				})
+				.catch(error => {
+					console.error(error);
+				});
+
+			var ABIclaimTopicRegistry = AbiclaimTopicRegistry;
+			var contractAddressclaimTopicRegistry = d1.ctrImplementation;
+			window.web3 = await new Web3(window.ethereum);
+			window.contractclaimTopicRegistry = await new window.web3.eth.Contract(ABIclaimTopicRegistry, contractAddressclaimTopicRegistry);
+			var a = await window.contractclaimTopicRegistry.methods.getClaimTopics().call();
+			console.log(a);
+			if(a.length == 0 ){
+				await window.contractclaimTopicRegistry.methods.addClaimTopic(1).send({ from: account, gas: "10000000" });
+			}
+			
+			
+
+			var AbiclaimRegistry;
+			await fetch('./abi/claimIssuerregistry.json')
+				.then(response => response.json())
+				.then(data1 => {
+					// Handle the retrieved JSON data
+					AbiclaimRegistry = data1;
+				})
+				.catch(error => {
+					console.error('Error loading JSON file:', error);
+				});
+
+			var ABIclaimRegistry = AbiclaimRegistry;
+			var contractAddressclaimRegistry = d1.tirImplementation;
+			window.web3 = await new Web3(window.ethereum);
+			window.contractclaimTopicRegistry = await new window.web3.eth.Contract(ABIclaimRegistry, contractAddressclaimRegistry);
+			// const d = await window.contract.methods.getClaimIssuer(issuer).call();
+			await window.contractclaimTopicRegistry.methods.addClaimIssuer(issuer,[1]).send({ from: account, gas: "10000000" });
+
+			document.getElementById("giveIssuerPower").innerHTML = "issuer registered ";
+
+
+		}
+		const  IsVerified = async () => {
+			var owner = document.getElementById("ownerForIsVerified").value;
+			var id = document.getElementById("idforIsVerified").value;
+			var user = document.getElementById("userAdddr").value;
+			var Abifactory;
+			await fetch('./abi/factoryToken.json')
+				.then(response => response.json())
+				.then(data => {
+					// Handle the retrieved JSON data
+					Abifactory = data;
+				})
+				.catch(error => {
+					console.error('Error loading JSON file:', error);
+				});
+
+			var ABIfactory = Abifactory;
+			var contractAddressfactory = factorytoken;
+			window.web3 = await new Web3(window.ethereum);
+			window.contractFactoryToken = await new window.web3.eth.Contract(ABIfactory, contractAddressfactory);
+			var d1 = await window.contractFactoryToken.methods.alldata(owner,id).call();
+			var AbiIdentityReg;
+			await fetch('./abi/identityregistry.json')
+				.then(response => response.json())
+				.then(data4 => {
+					// Handle the retrieved JSON data
+					AbiIdentityReg = data4;
+				})
+				.catch(error => {
+					console.error('Error loading JSON file:', error);
+				});
+
+			var ABIIdentityReg = AbiIdentityReg;
+			var contractAddressIdentityReg = d1.irImplementation;
+			window.web3 = await new Web3(window.ethereum);
+			window.contractIdentityReg = await new window.web3.eth.Contract(ABIIdentityReg,contractAddressIdentityReg );
+			var role1 = await window.contractIdentityReg.methods.isVerified(user).call();
+			
+			document.getElementById("IsVerified").innerHTML = "status ="+ role1;
+
+		}
+
+		const  mintToken= async () => {
+			var owner = document.getElementById("ownerTokenforMint").value;
+			var id = document.getElementById("idTokenforMint").value;
+			var recipient = document.getElementById("recipientOfToken").value;
+			var amt = document.getElementById("amountMint").value;
+			var Abi;
+			await fetch('./abi/factoryToken.json')
+				.then(response => response.json())
+				.then(data => {
+					// Handle the retrieved JSON data
+					Abi = data;
+				})
+				.catch(error => {
+					console.error('Error loading JSON file:', error);
+				});
+
+			var ABI = Abi;
+			var contractAddress = factorytoken;
+			window.web3 = await new Web3(window.ethereum);
+			window.contractFactoryToken = await new window.web3.eth.Contract(ABI, contractAddress);
+			var d1 = await window.contractFactoryToken.methods.alldata(owner,id).call();
+			var Abitoken;
+			await fetch('./abi/token.json')
+				.then(response => response.json())
+				.then(data1 => {
+					// Handle the retrieved JSON data
+					Abitoken = data1;
+				})
+				.catch(error => {
+					console.error('Error loading JSON file:', error);
+				});
+
+			var ABItoken = Abitoken;
+			var contractAddresstoken = d1.tokenImplementation;
+			window.web3 = await new Web3(window.ethereum);
+			window.contractToken = await new window.web3.eth.Contract(ABItoken, contractAddresstoken);
+			await window.contractToken.methods.mint(recipient,amt).send({ from: account, gas: "10000000" });
+			document.getElementById("mint").innerHTML = "token minted";
+		}
+
+
+		const  checkBalance= async () => {
+			var owner = document.getElementById("ownerTokenforbal").value;
+			var id = document.getElementById("idTokenforbal").value;
+			var recipient = document.getElementById("recipientOfTokenforBal").value;
+			
+			var Abi;
+			await fetch('./abi/factoryToken.json')
+				.then(response => response.json())
+				.then(data => {
+					// Handle the retrieved JSON data
+					Abi = data;
+				})
+				.catch(error => {
+					console.error('Error loading JSON file:', error);
+				});
+
+			var ABI = Abi;
+			var contractAddress = factorytoken;
+			window.web3 = await new Web3(window.ethereum);
+			window.contractFactoryToken = await new window.web3.eth.Contract(ABI, contractAddress);
+			var d1 = await window.contractFactoryToken.methods.alldata(owner,id).call();
+			var Abitoken;
+			await fetch('./abi/token.json')
+				.then(response => response.json())
+				.then(data1 => {
+					// Handle the retrieved JSON data
+					Abitoken = data1;
+				})
+				.catch(error => {
+					console.error('Error loading JSON file:', error);
+				});
+
+			var ABItoken = Abitoken;
+			var contractAddresstoken = d1.tokenImplementation;
+			window.web3 = await new Web3(window.ethereum);
+			window.contractToken = await new window.web3.eth.Contract(ABItoken, contractAddresstoken);
+			var context = 	await window.contractToken.methods.balanceOf(recipient).call();
+			console.log(context);
+			document.getElementById("checkBal").innerHTML = "balance = " + context;
+		}
+
+
+
+
+
+
+
+
+
 
 
 	

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 
-pragma solidity 0.8.17;
+pragma solidity ^0.8.17;
 //import "@openzeppelin/contracts/access/Ownable.sol";
 import "./factory1.sol";
 import "./Ifactory.sol";
 
-contract factory is Ifactory {
+contract mainfactory is Ifactory {
     struct Contracts {
         address tokenImplementation;
         address irImplementation;
@@ -17,10 +17,8 @@ contract factory is Ifactory {
 
     uint256 public salt;
     factory2 x = new factory2();
-    address[] owners;
 
-    mapping(address => mapping(uint256 => Contracts)) public alldata;
-    mapping(address => uint256) ownertoken;
+    mapping(uint256 => Contracts) public alldata;
 
     function _deploy(uint256 _salt, bytes memory bytecode)
         private
@@ -42,13 +40,11 @@ contract factory is Ifactory {
     }
 
     function deployall(
-        address _owner,
         string memory name,
         string memory symbol,
         uint256 decimal,
         address onchainId
     ) public returns (address) {
-        address _owners = _owner;
         salt++;
 
         IClaimTopicsRegistry ctr = IClaimTopicsRegistry(
@@ -78,62 +74,15 @@ contract factory is Ifactory {
                 onchainId
             )
         );
-
-        if (ownerexist(_owners)) {
-            ownertoken[_owners]++;
-            alldata[_owners][ownertoken[_owners]] = Contracts(
-                address(it),
-                address(ir),
-                address(mc),
-                address(irs),
-                address(ctr),
-                address(irs)
-            );
-        } else {
-            ownertoken[_owners]++;
-            alldata[_owners][ownertoken[_owners]] = Contracts(
-                address(it),
-                address(ir),
-                address(mc),
-                address(irs),
-                address(ctr),
-                address(irs)
-            );
-            owners.push(_owners);
-        }
-
-        Token(address(it)).grantRole(
-            0x0000000000000000000000000000000000000000000000000000000000000000,
-            _owners
-        );
-        x.grant_role(
+        alldata[salt] = Contracts(
+            address(it),
             address(ir),
+            address(mc),
             address(irs),
             address(ctr),
-            address(cir),
-            address(this)
+            address(irs)
         );
-        IdentityRegistry(address(ir)).grantRole(
-            0x0000000000000000000000000000000000000000000000000000000000000000,
-            _owners
-        );
-        IdentityRegistryStorage(address(irs)).bindIdentityRegistry(address(ir));
-
-        (Ownable(address(it))).transferOwnership(_owners);
-
-        //(Ownable(address(mc))).transferOwnership(_owners);
-        //(Ownable(address(ir))).transferOwnership(_owners);
-        (Ownable(address(ctr))).transferOwnership(_owners);
-        (Ownable(address(cir))).transferOwnership(_owners);
         return address(it);
-    }
-
-    function ownerexist(address _owner) internal view returns (bool _owners) {
-        for (uint256 i = 0; i < owners.length; i++) {
-            if (owners[i] == _owner) {
-                return true;
-            }
-        }
     }
 
     function tokens(

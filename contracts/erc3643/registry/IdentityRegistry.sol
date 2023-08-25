@@ -9,33 +9,20 @@ import "./interface/IClaimIssuersRegistry.sol";
 import "./interface/IIdentityRegistry.sol";
 import "./interface/IIdentityRegistryStorage.sol";
 
-/// @title ERC-3643 - IdentityRegistry
-/// @dev This contract is used to manage identities in the ERC-3643 standard.
-/// It allows for the registration, updating and deletion of identities associated with user addresses.
-/// It also supports the management of claim topics and claim issuers.
+// 0x2849644766c3bf8120d7f73954ac79cf0c758b29 is missing role 0xcab5a0bfe0b79d2c4b1c2e02599fa044d115b7511f9659307cb4276950967709
 contract IdentityRegistry is IIdentityRegistry, AccessControl {
-    /// @notice The address of the ClaimTopicsRegistry contract.
     IClaimTopicsRegistry private _tokenTopicsRegistry;
 
-    /// @notice The address of the ClaimIssuersRegistry contract.
     IClaimIssuersRegistry private _tokenIssuersRegistry;
 
-    /// @notice The address of the IdentityRegistryStorage contract.
     IIdentityRegistryStorage private _tokenIdentityStorage;
 
-    // keccak256(AGENT_ROLE)
     bytes32 public constant AGENT_ROLE =
         0xcab5a0bfe0b79d2c4b1c2e02599fa044d115b7511f9659307cb4276950967709;
 
-    // keccak256(OWNER_ROLE)
     bytes32 public constant OWNER_ROLE =
         0xb19546dff01e856fb3f010c267a7b1c60363cf8a4664e21cc89c26224620214e;
 
-    /// @dev Constructor of the IdentityRegistry contract.
-    /// @param _claimIssuersRegistry The address of the claim issuers registry contract.
-    /// @param _claimTopicsRegistry The address of the claim topics registry contract.
-    /// @param _identityStorage The address of the identity registry storage contract.
-    /// @notice This constructor sets the initial state of the IdentityRegistry contract.
     constructor(
         IClaimIssuersRegistry _claimIssuersRegistry,
         IClaimTopicsRegistry _claimTopicsRegistry,
@@ -49,6 +36,7 @@ contract IdentityRegistry is IIdentityRegistry, AccessControl {
         );
         _grantRole(bytes32(0), _msgSender());
         _grantRole(OWNER_ROLE, _msgSender());
+
         _tokenTopicsRegistry = _claimTopicsRegistry;
         _tokenIssuersRegistry = _claimIssuersRegistry;
         _tokenIdentityStorage = _identityStorage;
@@ -57,11 +45,6 @@ contract IdentityRegistry is IIdentityRegistry, AccessControl {
         emit IdentityStorageSet(_identityStorage);
     }
 
-    /// @notice Register an identity associated with a user address.
-    /// @param _userAddress The address of the user.
-    /// @param _identity The identity of the user.
-    /// @param _country The country code of the user.
-    /// @dev Only an agent can register an identity.
     function registerIdentity(
         address _userAddress,
         IIdentity _identity,
@@ -70,17 +53,12 @@ contract IdentityRegistry is IIdentityRegistry, AccessControl {
         _registerIdentity(_userAddress, _identity, _country);
     }
 
-    /// @notice Register multiple identities associated with multiple user addresses.
-    /// @param _userAddresses The array of user addresses.
-    /// @param _identities The array of identities.
-    /// @param _countries The array of country codes.
-    /// @dev Only an agent can register identities in batch.
     function batchRegisterIdentity(
         address[] calldata _userAddresses,
         IIdentity[] calldata _identities,
         uint16[] calldata _countries
     ) external onlyRole(AGENT_ROLE) {
-        uint length = _userAddresses.length;
+        uint256 length = _userAddresses.length;
         require(length == _identities.length, "ERC-3643: Array size mismatch");
         require(length == _countries.length, "ERC-3643: Array size mismatch");
         for (uint256 i = 0; i < length; ) {
@@ -91,27 +69,19 @@ contract IdentityRegistry is IIdentityRegistry, AccessControl {
         }
     }
 
-    /// @notice Update the identity associated with a user address.
-    /// @param _userAddress The address of the user.
-    /// @param _identity The new identity of the user.
-    /// @dev Only an agent can update an identity.
-    function updateIdentity(
-        address _userAddress,
-        IIdentity _identity
-    ) external onlyRole(AGENT_ROLE) {
+    function updateIdentity(address _userAddress, IIdentity _identity)
+        external
+        onlyRole(AGENT_ROLE)
+    {
         IIdentity oldIdentity = _getIdentity(_userAddress);
         _tokenIdentityStorage.modifyStoredIdentity(_userAddress, _identity);
         emit IdentityUpdated(oldIdentity, _identity);
     }
 
-    /// @notice Update the country code associated with a user address.
-    /// @param _userAddress The address of the user.
-    /// @param _country The new country code of the user.
-    /// @dev Only an agent can update a country code.
-    function updateCountry(
-        address _userAddress,
-        uint16 _country
-    ) external onlyRole(AGENT_ROLE) {
+    function updateCountry(address _userAddress, uint16 _country)
+        external
+        onlyRole(AGENT_ROLE)
+    {
         _tokenIdentityStorage.modifyStoredInvestorCountry(
             _userAddress,
             _country
@@ -119,20 +89,15 @@ contract IdentityRegistry is IIdentityRegistry, AccessControl {
         emit CountryUpdated(_userAddress, _country);
     }
 
-    /// @notice Delete the identity associated with a user address.
-    /// @param _userAddress The address of the user.
-    /// @dev Only an agent can delete an identity.
-    function deleteIdentity(
-        address _userAddress
-    ) external onlyRole(AGENT_ROLE) {
+    function deleteIdentity(address _userAddress)
+        external
+        onlyRole(AGENT_ROLE)
+    {
         IIdentity oldIdentity = _getIdentity(_userAddress);
         _tokenIdentityStorage.removeIdentityFromStorage(_userAddress);
         emit IdentityRemoved(_userAddress, oldIdentity);
     }
 
-    /// @notice Set the IdentityRegistryStorage contract.
-    /// @param _identityRegistryStorage The address of the new IdentityRegistryStorage contract.
-    /// @dev Only the owner can set the IdentityRegistryStorage contract.
     function setIdentityRegistryStorage(
         IIdentityRegistryStorage _identityRegistryStorage
     ) external onlyRole(OWNER_ROLE) {
@@ -140,19 +105,14 @@ contract IdentityRegistry is IIdentityRegistry, AccessControl {
         emit IdentityStorageSet(_identityRegistryStorage);
     }
 
-    /// @notice Set the ClaimTopicsRegistry contract.
-    /// @param _claimTopicsRegistry The address of the new ClaimTopicsRegistry contract.
-    /// @dev Only the owner can set the ClaimTopicsRegistry contract.
-    function setClaimTopicsRegistry(
-        IClaimTopicsRegistry _claimTopicsRegistry
-    ) external onlyRole(OWNER_ROLE) {
+    function setClaimTopicsRegistry(IClaimTopicsRegistry _claimTopicsRegistry)
+        external
+        onlyRole(OWNER_ROLE)
+    {
         _tokenTopicsRegistry = _claimTopicsRegistry;
         emit ClaimTopicsRegistrySet(_claimTopicsRegistry);
     }
 
-    /// @notice Set the ClaimIssuersRegistry contract.
-    /// @param _claimIssuersRegistry The address of the new ClaimIssuersRegistry contract.
-    /// @dev Only the owner can set the ClaimIssuersRegistry contract.
     function setClaimIssuersRegistry(
         IClaimIssuersRegistry _claimIssuersRegistry
     ) external onlyRole(OWNER_ROLE) {
@@ -160,9 +120,6 @@ contract IdentityRegistry is IIdentityRegistry, AccessControl {
         emit ClaimIssuersRegistrySet(_claimIssuersRegistry);
     }
 
-    /// @notice Checks if a user is verified based on their identity, claim topics, and claim issuers.
-    /// @param _userAddress The address of the user to check.
-    /// @return A boolean indicating if the user is verified.
     function isVerified(address _userAddress) external view returns (bool) {
         // Get the identity of the user from the given address
         IIdentity userIdentity = _getIdentity(_userAddress);
@@ -172,7 +129,7 @@ contract IdentityRegistry is IIdentityRegistry, AccessControl {
 
         // Get the required claim topics for the token
         uint256[] memory claimTopics = _tokenTopicsRegistry.getClaimTopics();
-        uint claimTopicsLength = claimTopics.length;
+        uint256 claimTopicsLength = claimTopics.length;
 
         // If there are no required claim topics, return true
         if (claimTopicsLength == 0) return true;
@@ -187,17 +144,14 @@ contract IdentityRegistry is IIdentityRegistry, AccessControl {
         return true;
     }
 
-    /// @notice Get the country of an investor.
-    /// @param _userAddress The address of the investor.
-    /// @return The country of the investor.
-    function investorCountry(
-        address _userAddress
-    ) external view returns (uint16) {
+    function investorCountry(address _userAddress)
+        external
+        view
+        returns (uint16)
+    {
         return _tokenIdentityStorage.storedInvestorCountry(_userAddress);
     }
 
-    /// @notice Get the issuers registry.
-    /// @return The current issuers registry.
     function issuersRegistry() external view returns (IClaimIssuersRegistry) {
         return _tokenIssuersRegistry;
     }
@@ -252,19 +206,22 @@ contract IdentityRegistry is IIdentityRegistry, AccessControl {
     /// @notice Get the identity of a user.
     /// @param _userAddress The address of the user.
     /// @return The identity of the user.
-    function _getIdentity(
-        address _userAddress
-    ) private view returns (IIdentity) {
+    function _getIdentity(address _userAddress)
+        private
+        view
+        returns (IIdentity)
+    {
         return _tokenIdentityStorage.storedIdentity(_userAddress);
     }
 
-    function _isClaimValid(
-        IIdentity userIdentity,
-        uint256 claimTopic
-    ) private view returns (bool) {
+    function _isClaimValid(IIdentity userIdentity, uint256 claimTopic)
+        private
+        view
+        returns (bool)
+    {
         IClaimIssuer[] memory claimIssuers = _tokenIssuersRegistry
             .getClaimIssuersForClaimTopic(claimTopic);
-        uint claimIssuersLength = claimIssuers.length;
+        uint256 claimIssuersLength = claimIssuers.length;
 
         if (claimIssuersLength == 0) {
             return false;
@@ -315,7 +272,7 @@ contract IdentityRegistry is IIdentityRegistry, AccessControl {
     function _isIssuerClaimValid(
         IIdentity userIdentity,
         address issuer,
-        uint claimTopic,
+        uint256 claimTopic,
         bytes memory sig,
         bytes memory data
     ) private view returns (bool) {
@@ -333,11 +290,3 @@ contract IdentityRegistry is IIdentityRegistry, AccessControl {
         }
     }
 }
-//0x36ba7acC1340FedA8E63673678ABA986073ca6b4     factory
-//0x52CE2a002Cb1f93AA0FD7e70f6A0d7c202c8115C   claimissuer acc5
-//0xC5bc65EAB2845F5Fb29925F41EF1188810B5aA81    claimissuer acc6 
-//0x98A5B1E62C1039E2043bc58b9Da628e9d4987AF8    claimIssuerResgistry
-//0xb2a28d95B754EE34ea3359862Ff11095a142ad5d     claimtopic registry
-
-// 0x377783e982f50064B13B0d09A505b672D4e1b294    identityregistrystorage
-//0xc99d9cBDE4fAc335e4FE853D61fAA8E8daA6D55d      identityregistry

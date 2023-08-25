@@ -63,7 +63,7 @@
 
 pragma solidity 0.8.17;
 
-import "https://github.com/TokenySolutions/T-REX/blob/main/contracts/registry/interface/IIdentityRegistry.sol";
+import "../registry/interface/IIdentityRegistry.sol";
 import "https://github.com/TokenySolutions/T-REX/blob/main/contracts/compliance/modular/IModularCompliance.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
